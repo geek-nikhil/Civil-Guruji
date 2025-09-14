@@ -33,37 +33,8 @@ export const leadService = {
     }
   },
 
-  // Update a lead
-  updateLead: async (id: string, leadData: Partial<CreateLeadRequest>): Promise<Lead> => {
-    try {
-      const response = await api.put(`/leads/${id}`, leadData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating lead:', error);
-      throw error;
-    }
-  },
 
-  // Delete a lead
-  deleteLead: async (id: string): Promise<void> => {
-    try {
-      await api.delete(`/leads/${id}`);
-    } catch (error) {
-      console.error('Error deleting lead:', error);
-      throw error;
-    }
-  },
 
-  // Get a single lead by ID
-  getLeadById: async (id: string): Promise<Lead> => {
-    try {
-      const response = await api.get(`/leads/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching lead:', error);
-      throw error;
-    }
-  }
 };
 
 export default leadService;
