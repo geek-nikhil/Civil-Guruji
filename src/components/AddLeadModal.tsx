@@ -30,7 +30,22 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
   const [errors, setErrors] = useState<Partial<CreateLeadRequest>>({});
 
   const handleInputChange = (field: keyof CreateLeadRequest, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Format phone numbers as user types
+    if (field === 'contact' || field === 'altPhone') {
+      // Remove all non-digit characters except +
+      const cleaned = value.replace(/[^\d+]/g, '');
+      // Add formatting for better UX
+      let formatted = cleaned;
+      if (cleaned.length > 3 && cleaned.length <= 6) {
+        formatted = cleaned.slice(0, 3) + '-' + cleaned.slice(3);
+      } else if (cleaned.length > 6) {
+        formatted = cleaned.slice(0, 3) + '-' + cleaned.slice(3, 6) + '-' + cleaned.slice(6, 10);
+      }
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+    
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -40,16 +55,72 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
   const validateForm = (): boolean => {
     const newErrors: Partial<CreateLeadRequest> = {};
 
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    } else if (formData.name.trim().length > 50) {
+      newErrors.name = 'Name must be less than 50 characters';
     }
+
+    // Phone validation
     if (!formData.contact.trim()) {
-      newErrors.contact = 'Phone is required';
+      newErrors.contact = 'Phone number is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = formData.contact.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone) || cleanPhone.length < 10) {
+        newErrors.contact = 'Please enter a valid phone number (minimum 10 digits)';
+      }
     }
+
+    // Alt Phone validation (if provided)
+    if (formData.altPhone && formData.altPhone.trim()) {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = formData.altPhone.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone) || cleanPhone.length < 10) {
+        newErrors.altPhone = 'Please enter a valid alternative phone number';
+      }
+    }
+
+    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      } else if (formData.email.length > 100) {
+        newErrors.email = 'Email must be less than 100 characters';
+      }
+    }
+
+    // Alt Email validation (if provided)
+    if (formData.altEmail && formData.altEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.altEmail)) {
+        newErrors.altEmail = 'Please enter a valid alternative email address';
+      }
+    }
+
+    // Interest validation
+    if (!formData.interest.trim()) {
+      newErrors.interest = 'Interest is required';
+    }
+
+    // Assigned To validation
+    if (!formData.assignedTo.trim()) {
+      newErrors.assignedTo = 'Assigned To is required';
+    }
+
+    // Passout Year validation (if provided)
+    if (formData.passoutYear && formData.passoutYear.trim()) {
+      const currentYear = new Date().getFullYear();
+      const passoutYear = parseInt(formData.passoutYear);
+      if (isNaN(passoutYear) || passoutYear < 1950 || passoutYear > currentYear + 5) {
+        newErrors.passoutYear = `Please enter a valid year (1950 - ${currentYear + 5})`;
+      }
     }
 
     setErrors(newErrors);
@@ -137,9 +208,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                   type="text"
                   value={formData.altPhone}
                   onChange={(e) => handleInputChange('altPhone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.altPhone ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Enter alternative phone"
                 />
+                {errors.altPhone && <p className="text-red-500 text-xs mt-1">{errors.altPhone}</p>}
               </div>
 
               {/* Alt. Email */}
@@ -149,9 +223,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                   type="email"
                   value={formData.altEmail}
                   onChange={(e) => handleInputChange('altEmail', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.altEmail ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Enter alternative email"
                 />
+                {errors.altEmail && <p className="text-red-500 text-xs mt-1">{errors.altEmail}</p>}
               </div>
 
               {/* Qualification */}
@@ -280,7 +357,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 <select
                   value={formData.interest}
                   onChange={(e) => handleInputChange('interest', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.interest ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
                   <option value="Web Development">Web Development</option>
                   <option value="Mobile Development">Mobile Development</option>
@@ -288,6 +367,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                   <option value="Digital Marketing">Digital Marketing</option>
                   <option value="UI/UX Design">UI/UX Design</option>
                 </select>
+                {errors.interest && <p className="text-red-500 text-xs mt-1">{errors.interest}</p>}
               </div>
 
               {/* Assigned To */}
@@ -296,13 +376,16 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 <select
                   value={formData.assignedTo}
                   onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.assignedTo ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
                   <option value="John Doe">John Doe</option>
                   <option value="Jane Smith">Jane Smith</option>
                   <option value="Emily Davis">Emily Davis</option>
                   <option value="Robert Johnson">Robert Johnson</option>
                 </select>
+                {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
               </div>
 
               {/* State */}
@@ -324,9 +407,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                   type="text"
                   value={formData.passoutYear}
                   onChange={(e) => handleInputChange('passoutYear', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.passoutYear ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Enter passout year"
                 />
+                {errors.passoutYear && <p className="text-red-500 text-xs mt-1">{errors.passoutYear}</p>}
               </div>
             </div>
           </div>

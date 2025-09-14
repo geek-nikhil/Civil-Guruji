@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import LeadsTable from '../components/LeadsTable';
 import AddLeadModal from '../components/AddLeadModal';
-import { SAMPLE_LEADS } from '../data/sampleLeads';
 import { CreateLeadRequest, Lead } from '../types/lead';
 import leadService from '../services/leadService';
 
@@ -11,8 +10,28 @@ const App = () => {
   const [activeMenuItem, setActiveMenuItem] = useState('leads');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch leads on component mount
+  useEffect(() => {
+    const fetchLeads = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedLeads = await leadService.getLeads();
+        setLeads(fetchedLeads);
+      } catch (error) {
+        console.error('Failed to fetch leads:', error);
+        setError('Failed to load leads. Please check if the backend server is running.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLeads();
+  }, []);
 
   const handleAddLead = () => {
     setIsAddLeadModalOpen(true);
@@ -30,6 +49,9 @@ const App = () => {
       
       // Add the new lead to the local state
       setLeads(prevLeads => [...prevLeads, newLead]);
+      
+      // Close the modal
+      setIsAddLeadModalOpen(false);
       
       console.log('Lead created successfully:', newLead);
     } catch (error) {
@@ -92,7 +114,7 @@ const App = () => {
         {/* Page Content */}
         <div className="flex-1 overflow-auto p-6">
           {activeMenuItem === 'leads' && (
-            <LeadsTable leads={leads} />
+            <LeadsTable leads={leads} isLoading={isLoading} error={error} onAddLead={handleAddLead} />
           )}
           
           {activeMenuItem === 'dashboard' && (
