@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Lead, CreateLeadRequest } from '../types/lead';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://civil-guruji-q1xx.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,7 +15,7 @@ export const leadService = {
   getLeads: async (): Promise<Lead[]> => {
     try {
       const response = await api.get('/leads');
-      return response.data;
+      return response.data.data; // Backend returns {success: true, data: [...], count: number}
     } catch (error) {
       console.error('Error fetching leads:', error);
       throw error;
@@ -26,7 +26,7 @@ export const leadService = {
   createLead: async (leadData: CreateLeadRequest): Promise<Lead> => {
     try {
       const response = await api.post('/leads', leadData);
-      return response.data;
+      return response.data.data; // Backend returns {success: true, message: string, data: {...}}
     } catch (error) {
       console.error('Error creating lead:', error);
       throw error;
