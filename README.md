@@ -1,3 +1,18 @@
+# Leads Dashboard
+
+<img width="1919" height="917" alt="image" src="https://github.com/user-attachments/assets/d35491cf-adfa-4e3d-a0cd-8544b2460410" />
+
+
+# features and filters
+<img width="1919" height="912" alt="image" src="https://github.com/user-attachments/assets/e47f6608-127a-4ed1-a567-813467648580" />
+
+
+<img width="1897" height="912" alt="image" src="https://github.com/user-attachments/assets/27b2bae3-3a9c-4332-a3a5-966750277346" />
+
+
+
+
+
 # 🚀 CivilGuruji Lead Management System
 
 A modern, full-stack lead management application built with React, Node.js, and MongoDB. This application provides a comprehensive solution for managing leads with advanced filtering, real-time validation, and a beautiful user interface.
